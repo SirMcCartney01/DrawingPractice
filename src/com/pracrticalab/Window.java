@@ -7,9 +7,11 @@ import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.ButtonGroup;
+import javax.swing.JPanel;
 
 import java.awt.Dimension;
 import java.awt.Container;
+import java.awt.FlowLayout;
 
 public class Window extends JFrame {
 
@@ -35,6 +37,8 @@ public class Window extends JFrame {
         JMenuItem exitMenu = new JMenuItem("Salir");
 
         MyPanel myPanel = new MyPanel();
+        JPanel controlsPanel = new JPanel();
+        controlsPanel.setLayout(new FlowLayout());
 
         menuBar.add(fileMenu);
         menuGroup.add(directedMenu);

@@ -1,6 +1,6 @@
-# Drawing practice
+# Graphs
 
-Using Java graphics libraries
+Implementing graphs with Java using swing libraries.
 
 * Antonio Campos
 * Cesar Placido
