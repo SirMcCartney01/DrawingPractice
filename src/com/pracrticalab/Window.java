@@ -8,6 +8,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.ButtonGroup;
 import javax.swing.JPanel;
+import javax.swing.JOptionPane;
 
 import java.awt.Dimension;
 import java.awt.Container;
@@ -30,21 +31,25 @@ public class Window extends JFrame {
         Container container = frame.getContentPane();
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("Archivo");
+        JMenu helpMenu = new JMenu("Ayuda");
         JMenu graphTypeMenu = new JMenu("Tipo de grafo");
         ButtonGroup menuGroup = new ButtonGroup();
         JRadioButtonMenuItem directedMenu = new JRadioButtonMenuItem("Dirigido", true);
         JRadioButtonMenuItem noDirectedMenu = new JRadioButtonMenuItem("No dirigido");
         JMenuItem exitMenu = new JMenuItem("Salir");
+        JMenuItem aboutMenu = new JMenuItem("Acerca");
 
         MyPanel myPanel = new MyPanel();
         JPanel controlsPanel = new JPanel();
         controlsPanel.setLayout(new FlowLayout());
 
         menuBar.add(fileMenu);
+        menuBar.add(helpMenu);
         menuGroup.add(directedMenu);
         menuGroup.add(noDirectedMenu);
 
         fileMenu.add(graphTypeMenu);
+        helpMenu.add(aboutMenu);
         graphTypeMenu.add(directedMenu);
         graphTypeMenu.add(noDirectedMenu);
         fileMenu.addSeparator();
@@ -54,6 +59,8 @@ public class Window extends JFrame {
 
         directedMenu.addActionListener(e -> DIRECTED = true);
         noDirectedMenu.addActionListener(e -> DIRECTED = false);
+        aboutMenu.addActionListener(e -> JOptionPane.showMessageDialog(this, "Proyecto de Grafos\n\tEstado: Beta",
+                this.getTitle(), JOptionPane.INFORMATION_MESSAGE));
         exitMenu.addActionListener(e -> System.exit(0));
 
         container.add(myPanel);

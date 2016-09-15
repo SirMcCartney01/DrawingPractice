@@ -18,6 +18,7 @@ import java.awt.geom.Point2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 
@@ -25,16 +26,16 @@ public class MyPanel extends JPanel {
 
     private List<Ellipse2D> ellipses;
     private List<JLabel> labels;
-    private int count;
+    private List<Line2D> lines;
+    private int count, radius;
     private Ellipse2D dragged;
     private Point offset, pointStart, pointEnd;
-    private int radius;
-    private static boolean isDragged = true;
 
     public MyPanel() {
         super();
         this.ellipses = new ArrayList<>();
         this.labels = new ArrayList<>();
+        this.lines = new LinkedList<>();
         this.count = 1;
         this.radius = 50;
         initPanel(this);
@@ -57,17 +58,15 @@ public class MyPanel extends JPanel {
                 int clicks = 0;
                 Point2D auxPoint;
 
-                if (current != null && e.getClickCount() >= 2) {
+                /* if(current != null && e.getClickCount() >= 2) {
                     clicks += e.getClickCount();
-                    auxPoint = e.getPoint();
-                    if (clicks == 2) {
-                        System.out.println("Got two clicks at X:" + auxPoint.getX() + " Y:" + auxPoint.getY()); // Debug
-                    }
+                    if (clicks == 2)
+                        auxPoint = e.getPoint();
                     else if (clicks == 4) {
-                        // TODO: add linea
-                        System.out.println("Got four clicks at X:" + auxPoint.getX() + " Y:" + auxPoint.getY()); // Debug
+                        lines.add(new Line2D.Float(auxPoint, e.getPoint()));
+                        clicks = 0;
                     }
-                }
+                } */
 
                 panel.repaint();
             }
@@ -124,6 +123,7 @@ public class MyPanel extends JPanel {
                 }
 
                 pointEnd = e.getPoint();
+
                 panel.repaint();
             }
         });
@@ -152,14 +152,19 @@ public class MyPanel extends JPanel {
                     ellipses.get(i).getBounds().y);
 
         graphics2D.setColor(Color.WHITE);
+
         if (pointStart != null) {
-            if(Window.DIRECTED)
-                graphics2D.draw(new Line2D.Float(pointStart.x, pointStart.y, pointEnd.x, pointEnd.y));
+            Line2D line = new Line2D.Float(pointStart, pointEnd);
+            float middleX = (float) (line.getX1() + line.getX2()) / 2;
+            float middleY = (float) (line.getY1() + line.getY2()) / 2;
+
+            if(!Window.DIRECTED)
+                graphics2D.draw(line);
             else {
-                Line2D.Float line = new Line2D.Float(pointStart.x, pointStart.y, pointEnd.x, pointEnd.y);
                 graphics2D.draw(line);
                 drawArrowHead(graphics2D, pointEnd, pointStart, Color.WHITE);
             }
+            graphics2D.drawString(Integer.toString((int) line.getBounds().getWidth()), middleX, middleY);
         }
 
         graphics2D.dispose();
@@ -174,21 +179,19 @@ public class MyPanel extends JPanel {
         return null;
     }
 
-    private void drawArrowHead(Graphics2D g2, Point tip, Point tail, Color color)
-    {
+    private void drawArrowHead(Graphics2D g2, Point start, Point end, Color color) {
         double phi = Math.toRadians(30);
         int size = 15;
 
         g2.setPaint(color);
-        double dy = tip.y - tail.y;
-        double dx = tip.x - tail.x;
+        double dy = start.y - end.y;
+        double dx = start.x - end.x;
         double theta = Math.atan2(dy, dx);
         double x, y, rho = theta + phi;
-        for(int j = 0; j < 2; j++)
-        {
-            x = tip.x - size * Math.cos(rho);
-            y = tip.y - size * Math.sin(rho);
-            g2.draw(new Line2D.Double(tip.x, tip.y, x, y));
+        for(int j = 0; j < 2; j++) {
+            x = start.x - size * Math.cos(rho);
+            y = start.y - size * Math.sin(rho);
+            g2.draw(new Line2D.Double(start.x, start.y, x, y));
             rho = theta - phi;
         }
     }
