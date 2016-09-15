@@ -9,174 +9,154 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Dimension;
 import java.awt.Cursor;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Point2D;
 import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.ArrayList;
 
 public class MyPanel extends JPanel {
 
     private List<Ellipse2D> ellipses;
-    private List<JLabel> labels;
     private List<Line2D> lines;
-    private int count, radius;
-    private Ellipse2D dragged;
-    private Point offset, pointStart, pointEnd;
+    private Ellipse2D current;
+    private Line2D	 line;
+    private Point2D	 auxPunto;
+    private int clicks = 0, count = 0;
+
+    private static final int DIMENSION = 50;
 
     public MyPanel() {
         super();
         this.ellipses = new ArrayList<>();
-        this.labels = new ArrayList<>();
-        this.lines = new LinkedList<>();
-        this.count = 1;
-        this.radius = 50;
+        this.current = null;
+        this.lines = new ArrayList<>();
+        this.line = null;
+        this.auxPunto = null;
         initPanel(this);
     }
 
     private void initPanel(JPanel panel) {
         panel.setBackground(Color.BLACK);
 
-        panel.addMouseListener(new MouseAdapter() {
+        panel.addMouseListener(new MouseAdapter(){
             @Override
-            public void mouseClicked(MouseEvent e) {
-                ellipses.add(new Ellipse2D.Float(e.getX() - (radius / 2), e.getY() - (radius / 2),
-                        radius, radius));
-
-                JLabel nodeText = new JLabel();
-                nodeText.setText(Integer.toString(count++));
-                labels.add(nodeText);
-
-                Ellipse2D current = findEllipse(e.getPoint());
-                int clicks = 0;
-                Point2D auxPoint;
-
-                /* if(current != null && e.getClickCount() >= 2) {
-                    clicks += e.getClickCount();
-                    if (clicks == 2)
-                        auxPoint = e.getPoint();
-                    else if (clicks == 4) {
-                        lines.add(new Line2D.Float(auxPoint, e.getPoint()));
-                        clicks = 0;
-                    }
-                } */
-
+            public void mousePressed(MouseEvent e){
+                current = findEllipse(e.getPoint());
+                if(current == null){
+                    add(e.getPoint());
+                    count++;
+                }
                 panel.repaint();
             }
 
             @Override
-            public void mousePressed(MouseEvent e) {
-                for (Ellipse2D node : ellipses) {
-                    if (node.contains(e.getPoint())) {
-                        dragged = node;
-                        offset = new Point(node.getBounds().x - e.getX(), node.getBounds().y - e.getY());
-                        panel.repaint();
-                        break;
+            public void mouseClicked(MouseEvent e) {
+                current = findEllipse(e.getPoint());
+                if (current != null && e.getClickCount() >= 2){
+                    clicks += e.getClickCount();
+                    System.out.println("Numero de clicks: " + clicks);
+
+                    if (clicks == 2){
+                        auxPunto = e.getPoint();
+                        System.out.println("Posicion actual X: " + e.getX() + " Y: " + e.getY());
+                    }
+                    else if (clicks == 4){
+                        addLinea(auxPunto, e.getPoint());
+                        clicks=0;
                     }
                 }
-
-                pointStart = e.getPoint();
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                if (dragged != null)
-                    panel.repaint();
-
-                dragged = null;
-                offset = null;
-
-                pointStart = null;
+                panel.repaint();
             }
         });
 
-        panel.addMouseMotionListener(new MouseAdapter() {
+        panel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
-            public void mouseMoved(MouseEvent e) {
-                if(findEllipse(e.getPoint()) == null)
+            public void mouseMoved(MouseEvent e){
+                if(findEllipse(e.getPoint())==null)
                     setCursor(Cursor.getDefaultCursor());
                 else
                     setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-                pointEnd = e.getPoint();
             }
 
             @Override
-            public void mouseDragged(MouseEvent e) {
-                if (dragged != null && offset != null) {
-                    Point to = e.getPoint();
-                    to.x += offset.x;
-                    to.y += offset.y;
-
-                    final Rectangle bounds = dragged.getBounds();
-                    bounds.setLocation(to);
-                    dragged.setFrame(bounds);
-
-                    panel.repaint();
+            public void mouseDragged(MouseEvent e){
+                if(current != null){
+                    int x = e.getX();
+                    int y = e.getY();
+                    current.setFrame(x - DIMENSION / 2, y - DIMENSION / 2, DIMENSION, DIMENSION);
+                    //nombre.setX(x);
+                    //nombre.setY(y);
+                    //linea.setLine(auxPunto.getX(), auxPunto.getY(), x, y);
                 }
-
-                pointEnd = e.getPoint();
-
                 panel.repaint();
             }
         });
     }
 
     @Override
-    public Dimension getPreferredSize() {
-        return new Dimension(400, 400);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
+    public void paintComponent(Graphics g){
         super.paintComponent(g);
-        Graphics2D graphics2D = (Graphics2D) g.create();
+        Graphics2D g2 = (Graphics2D) g;
 
-        graphics2D.setColor(new Color(117, 35, 37));
-        for (Ellipse2D node : ellipses) {
-            graphics2D.fill(node);
-            if (node == dragged)
-                graphics2D.draw(node);
+        g2.setColor(new Color(117, 35, 37));
+        for (Ellipse2D ellipse : ellipses){
+            g2.fill(ellipse);
+            //g2.drawString(nombres[i].getNombre(),(float)nombres[i].getX(),(float)nombres[i].getY());
         }
 
-        graphics2D.setColor(Color.WHITE);
-        for (int i = 0; i < ellipses.size(); i++)
-            graphics2D.drawString(labels.get(i).getText(), ellipses.get(i).getBounds().x,
-                    ellipses.get(i).getBounds().y);
-
-        graphics2D.setColor(Color.WHITE);
-
-        if (pointStart != null) {
-            Line2D line = new Line2D.Float(pointStart, pointEnd);
-            float middleX = (float) (line.getX1() + line.getX2()) / 2;
-            float middleY = (float) (line.getY1() + line.getY2()) / 2;
-
-            if(!Window.DIRECTED)
-                graphics2D.draw(line);
+        for(Line2D line : lines){
+            g2.setColor(Color.WHITE);
+            if (!Window.DIRECTED)
+                g2.draw(line);
             else {
-                graphics2D.draw(line);
-                drawArrowHead(graphics2D, pointEnd, pointStart, Color.WHITE);
+                g2.draw(line);
+                //drawArrowHead(g2, );
             }
-            graphics2D.drawString(Integer.toString((int) line.getBounds().getWidth()), middleX, middleY);
         }
-
-        graphics2D.dispose();
     }
 
     @Nullable
-    private Ellipse2D findEllipse(Point2D p) {
-        for (Ellipse2D node : ellipses) {
-            if (node.contains(p))
-                return node;
+    private Ellipse2D findEllipse(Point2D p){
+        for (Ellipse2D ellipse : ellipses){
+            if(ellipse.contains(p)){
+                return ellipse;
+            }
         }
+
         return null;
+    }
+
+    private void add(Point2D p){
+        double x = p.getX();
+        double y = p.getY();
+        current = new Ellipse2D.Double(x - DIMENSION / 2, y - DIMENSION / 2, DIMENSION, DIMENSION);
+        //nombre = new NombresNodo(""+cuenta,p.getX(),p.getY());
+        //nombres[cuenta] = nombre;
+        ellipses.add(current);
+    }
+
+    private void addLinea(Point2D first,Point2D second){
+        double x  = first.getX();
+        double y  = first.getY();
+        double x1  = second.getX();
+        double y1  = second.getY();
+        line = new Line2D.Double(x, y, x1, y1);
+        lines.add(line);
+    }
+
+    private void remove(Ellipse2D s){
+        if(s == null)
+            return;
+        if(s == current)
+            current = null;
+
+        ellipses.remove(s);
     }
 
     private void drawArrowHead(Graphics2D g2, Point start, Point end, Color color) {
